@@ -1,9 +1,4 @@
-import mongoose from 'mongoose';
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/paytm', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-});
 
 // Create a Schema for Users
 const userSchema = new mongoose.Schema({
@@ -38,6 +33,23 @@ const userSchema = new mongoose.Schema({
 // Create a model from the schema
 const User = mongoose.model('User', userSchema);
 
+// Attempt to connect to MongoDB
+const connectDB = async () => {
+    try {
+        await mongoose.connect('mongodb://0.0.0.0:27017/paytm', {
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        });
+        console.log('Connected to MongoDB successfully');
+        return true;
+    } catch (err) {
+        console.error('Error connecting to MongoDB:', err);
+        return false;
+    }
+};
+
+// Export the connection function and User model
 module.exports = {
-	User
+    connectDB,
+    User
 };

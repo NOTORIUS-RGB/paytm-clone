@@ -1,19 +1,15 @@
-// backend/api/index.js
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
+const userRouter = require("./user");
 const router = express.Router();
-// backend/index.js
 
+// Test endpoint
+router.get("/health", (req, res) => {
+    res.json({
+        message: "API is working!",
+        status: "healthy"
+    });
+});
 
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-app.use("/api/v1", rootRouter);
-
+router.use("/user", userRouter);
 
 module.exports = router;
-app.listen(3000, () => {
-    console.log("Server is running on port 3000");
-});
