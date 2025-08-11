@@ -1,15 +1,12 @@
 const express = require('express');
 const userRouter = require("./user");
+const accountRouter = require("./accounts");
 const router = express.Router();
 
 // Test endpoint
-router.get("/health", (req, res) => {
-    res.json({
-        message: "API is working!",
-        status: "healthy"
-    });
-});
+
 
 router.use("/user", userRouter);
+router.use("/account", accountRouter);
 
 module.exports = router;

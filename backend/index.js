@@ -22,7 +22,12 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: "Something went wrong!" });
 });
 
-const PORT = 3000;
-app.listen(PORT, () => {
+const PORT = 4000;
+app.listen(PORT, '0.0.0.0', (error) => {
+    if (error) {
+        console.error('Error starting server:', error);
+        return;
+    }
     console.log(`Server is running on http://localhost:${PORT}`);
+    console.log('Press Ctrl+C to quit.');
 });
