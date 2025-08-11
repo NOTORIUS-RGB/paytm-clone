@@ -1,152 +1,61 @@
+// backend/routes/user.js
 const express = require('express');
+// Corrected path and explicit .js extension for consistency
+const { User, Account } = require('../db.js');
 const router = express.Router();
-const zod = require("zod");
-const prisma = require("./db");
-const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../config");xpress = require('express');
 
-const { User } = require("./db");
+// Example of a signup route (assuming it's in this file)
+router.post('/signup', async (req, res) => {
+    try {
+        const { username, password, firstName, lastName } = req.body;
 
-const  { authMiddleware } = require("../middleware");
-
-
-const signupBody = zod.object({
-    username: zod.string().email(),
-	firstName: zod.string(),
-	lastName: zod.string(),
-	password: zod.string()
-})
-
-router.post("/signup", async (req, res) => {
-    const { success } = signupBody.safeParse(req.body)
-    if (!success) {
-        return res.status(411).json({
-            message: "Email already taken / Incorrect inputs"
-        })
-    }
-
-    const existingUser = await prisma.user.findUnique({
-        where: {
-            username: req.body.username
+        // Basic validation (you should add more robust validation)
+        if (!username || !password || !firstName || !lastName) {
+            return res.status(400).json({ message: "All fields are required" });
         }
-    });
 
-    if (existingUser) {
-        return res.status(411).json({
-            message: "Email already taken/Incorrect inputs"
+        // Check if user already exists
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(409).json({ message: "Username already taken" });
+        }
+
+        const newUser = new User({
+            username,
+            password, // In a real app, hash this password!
+            firstName,
+            lastName
         });
+
+        await newUser.save();
+
+        // Create an account for the new user with an initial balance
+        const newAccount = new Account({
+            userId: newUser._id,
+            balance: 1000 // Initial balance
+        });
+        await newAccount.save();
+
+        console.log("User and account created successfully!");
+        res.status(201).json({ message: "User created successfully", userId: newUser._id });
+
+    } catch (error) {
+        console.error("Error during signup:", error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
     }
+});
 
-    const user = await prisma.user.create({
-        data: {
-            username: req.body.username,
-            password: req.body.password,
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            account: {
-                create: {
-                    balance: 1000 // Give initial balance
-                }
-            }
-        }
-    });
-    const userId = user.id;
-        await Account.create({
-        userId,
-        balance: 1 + Math.random() * 10000
-    })
 
-    const token = jwt.sign({
-        userId
-    }, JWT_SECRET);
-
-    res.json({
-        message: "User created successfully",
-        token: token
-    })
-})
-
-const signinBody = zod.object({
-    username: zod.string().email(),
-	password: zod.string()
-})
-
-router.post("/signin", async (req, res) => {
-    const { success } = signinBody.safeParse(req.body)
-    if (!success) {
-        return res.status(411).json({
-            message: "Email already taken / Incorrect inputs"
-        })
+// New route to fetch all users (for testing/admin) - as discussed previously
+router.get('/allusers', async (req, res) => {
+    try {
+        const users = await User.find({});
+        res.json({ users });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ message: "Error fetching users", error: error.message });
     }
+});
 
-    const user = await prisma.user.findFirst({
-        where: {
-            username: req.body.username,
-            password: req.body.password
-        }
-    });
 
-    if (user) {
-        const token = jwt.sign({
-            userId: user._id
-        }, JWT_SECRET);
-  
-        res.json({
-            token: token
-        })
-        return;
-    }
-
-    
-    res.status(411).json({
-        message: "Error while logging in"
-    })
-})
-
-// other auth routes
-
-const updateBody = zod.object({
-	password: zod.string().optional(),
-    firstName: zod.string().optional(),
-    lastName: zod.string().optional(),
-})
-
-router.put("/", authMiddleware, async (req, res) => {
-    const { success } = updateBody.safeParse(req.body)
-    if (!success) {
-        res.status(411).json({
-            message: "Error while updating information"
-        })
-    }
-
-		await User.updateOne({ _id: req.userId }, req.body);
-	
-    res.json({
-        message: "Updated successfully"
-    })
-})
-router.get("/bulk", async (req, res) => {
-    const filter = req.query.filter || "";
-
-    const users = await User.find({
-        $or: [{
-            firstName: {
-                "$regex": filter
-            }
-        }, {
-            lastName: {
-                "$regex": filter
-            }
-        }]
-    })
-
-    res.json({
-        user: users.map(user => ({
-            username: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            _id: user._id
-        }))
-    })
-})
 module.exports = router;
