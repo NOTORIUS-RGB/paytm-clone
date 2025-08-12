@@ -10,17 +10,31 @@ export const Balance = () => {
         const fetchBalance = async () => {
             try {
                 const token = localStorage.getItem("token");
+                console.log("Token found:", !!token);
+                
                 if (token) {
+                    console.log("Fetching balance...");
                     const response = await axios.get("http://localhost:3000/api/v1/account/balance", {
                         headers: {
                             Authorization: "Bearer " + token
                         }
                     });
+                    console.log("Balance response:", response.data);
                     setBalance(response.data.balance);
+                } else {
+                    console.log("No token found");
+                    setError("No authentication token found");
                 }
             } catch (error) {
                 console.error("Error fetching balance:", error);
-                setError("Failed to load balance");
+                if (error.response) {
+                    console.error("Error response:", error.response.data);
+                    setError(`Failed to load balance: ${error.response.data.message || error.response.statusText}`);
+                } else if (error.request) {
+                    setError("No response from server. Please check if backend is running.");
+                } else {
+                    setError("Failed to load balance");
+                }
             } finally {
                 setLoading(false);
             }
