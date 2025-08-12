@@ -27,6 +27,12 @@ export const Signup = () => {
             return;
         }
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(username)) {
+            setError("Please enter a valid email address");
+            return;
+        }
+
         setLoading(true);
         setError("");
 
@@ -48,21 +54,24 @@ export const Signup = () => {
     };
 
     return (
-        <div className="bg-gradient-to-br from-purple-50 to-blue-100 min-h-screen flex justify-center items-center p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
-                <div className="text-center mb-8">
-                    <div className="text-4xl mb-4">🚀</div>
+        <div className="bg-gradient-to-br from-purple-50 via-pink-100 to-indigo-200 min-h-screen flex justify-center items-center p-4">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-10 border border-gray-100">
+                <div className="text-center mb-10">
+                    <div className="text-6xl mb-6">🚀</div>
                     <Heading label="Join PayTM" />
-                    <SubHeading label="Enter your information to create an account" />
+                    <SubHeading label="Create your account and start sending money" />
                 </div>
 
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                        {error}
+                    <div className="bg-red-50 border-l-4 border-red-400 text-red-700 px-6 py-4 rounded-lg mb-6">
+                        <div className="flex items-center">
+                            <span className="text-xl mr-2">⚠️</span>
+                            {error}
+                        </div>
                     </div>
                 )}
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     <InputBox 
                         onChange={(e) => setFirstName(e.target.value)} 
                         placeholder="John" 
@@ -96,6 +105,7 @@ export const Signup = () => {
                             label="Create Account"
                             loading={loading}
                             disabled={!firstName || !lastName || !username || !password}
+                            size="lg"
                         />
                     </div>
                 </div>
